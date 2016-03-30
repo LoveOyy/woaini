@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="js/jquery.min.js"></script>
+
+</head>
+<body>
+
+    <div>用户名：<input id="usnm" type="text" placeholder="输入用户名"/></div>
+    <div>密码：<input id="pswd" type="password" placeholder="输入密码"/></div>
+
+    <input name="reg" type="button" value="注册"/>
+    <input name="sub" type="button" value="登录"/>
+
+</body>
+</html>
+
+
+<script>
+    var ssid,sid;
+
+    $(function() {
+        $.ajax({
+            type: 'get',
+            url: 'http://192.168.1.66/getsession/time/3600',
+            dataType: 'json',
+            success: function (json) {
+                localStorage.setItem("ssid",json.ssid);
+            }
+        });
+
+    $("input[name='reg']").click(function(){
+        sid = localStorage.getItem("ssid");
+        $.ajax({
+            type: 'get',
+            url: 'http://192.168.1.66/user/User/reg',//这里是接收数据的PHP程序
+            data: 'ssid='+sid+'&username='+$('#usnm').val()+'&password='+$('#pswd').val(),//传给PHP的数据，多个参数用&连接
+            dataType: 'json',//服务器返回的数据类型 可选XML ,Json jsonp script html text等
+            success:function(json){
+                if(json.type){
+                    alert('SUCCESS')
+                }else{
+                    alert(json.msg)
+                }
+                //这里是ajax提交成功后，PHP程序返回的数据处理函数。msg是返回的数据，数据类型在dataType参数里定义！
+            },
+            error:function(){
+
+                //ajax提交失败的处理函数！
+            }
+        })
+
+    });
+
+    $("input[name='sub']").click(function(){
+        sid = localStorage.getItem("ssid");
+        $.ajax({
+            type: 'get',
+            url: 'http://192.168.1.66/user/User/login',
+            data: 'ssid='+sid+'&username='+$('#usnm').val()+'&password='+$('#pswd').val(),
+            dataType: 'json',
+            success:function(json){
+                if(json.type){
+                    alert('SUCCESS');
+                    location.href = 'list.html';
+                }else{
+                    alert(json.msg)
+                }
+            },
+            error:function(){
+                alert("error")
+            }
+        })
+
+    })
+
+
+
+    });
+</script>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.tmpl.min.js"></script>
+    <style>
+        .col-lg-3{border: 1px solid #2a6496;line-height: 36px;text-align: center;}
+        .col-lg-3 input{width: 20%;line-height: 30px;padding: 0;margin: 0;text-align: center;background: #0099FF;color: #fff;border: none;}
+    </style>
+
+</head>
+<body>
+    <div class="row"><div class="col-lg-3 col-md-3"><input onclick="Add()" type="button" value="添加"/></div></div>
+    <div class="row"><div class="col-lg-3 col-md-3">标题</div><div class="col-lg-3 col-md-3">内容</div><div class="col-lg-3 col-md-3">时间</div><div class="col-lg-3 col-md-3">操作</div></div>
+
+    <div id="box_list" class="row"></div>
+    <script id="box_result" type="text/x-jquery-tmpl">
+        <div class="row msg_lis"><div class="col-lg-3 col-md-3 fir_chid">${title}</div><div class="col-lg-3 col-md-3 sec_chid">${body}</div><div class="col-lg-3 col-md-3">${time}</div><div class="col-lg-3 col-md-3">&nbsp;&nbsp;<input id="p_${id}" onclick="Mod(this,${id})" type="button" name="modify" value="修改"/>&nbsp;&nbsp;<input onclick="Del(${id})" type="button" value="删除"/>&nbsp;&nbsp;</div></div>
+
+    </script>
+
+
+    <input name='page' type='hidden' value="1"/><input name='page_num' type='hidden' value=""/>
+
+    <div class="row" style="padding-right: 20px; margin-top: 20px;">  <!--分页-->
+        <div class="row">
+            <div class="col-lg-5 col-xs-5"></div>
+            <div class="col-lg-7 col-xs-7" id="pageNav"></div>
+        </div>
+    </div>
+
+<div class="row add_msg" style="position: absolute;top: 100px;left: 30%;;width: 40%; margin: 0 auto; display: none;background: #e6e6e6;height: 200px;">
+    <div class="row"><div class="col-xs-1"></div><div class="col-xs-10"></div><div onclick="Close()" class="col-xs-1"><img src="css/slw_clos.png"/></div></div>
+    <form >
+        <div class="row" style="line-height: 30px;">标题：<input id="titl" type="text" placeholder="请输入标题"/></div>
+        <div style="height: 10px;"></div>
+        <div class="row" style="line-height: 30px;">内容：<input id="cont" type="text" placeholder="请输入内容"/></div>
+        <div style="height: 10px;"></div>
+        <div class="row" style="line-height: 30px;"><input name="sub_form" type="button" value="提交"/></div>
+    </form>
+</div>
+    <div id="test" style="height:70px;display: none;"></div>
+</body>
+</html>
+
+
+<script type="text/javascript" src="js/pagenav1.1.cn.js"></script>
+<script type="text/javascript">
+    var page, pag_num, sid;
+    sid = localStorage.getItem('ssid');
+
+
+window.onload=function(){
+    $.ajax({
+        type: 'get',//可选get
+        url: 'http://192.168.1.66/index/Index/getlist',
+        data: 'ssid='+sid+'&page=1&num=4',
+        dataType: 'json',
+        success:function(json){
+            $("input[name='page']").val(json.this_page);
+            $("input[name='page_num']").val(json.page_num);
+            PageLoad();
+        },
+        error:function(){
+        }
+    });
+};
+
+    function PageLoad(){
+        page = $("input[name='page']").val();
+        pag_num = $("input[name='page_num']").val();
+
+        pageNav.pre = "上一页";
+        pageNav.next = "下一页";
+
+        //  p,当前页码,pn,总页面
+        pageNav.fn = function (p, pn) {
+            document.getElementById("test").innerHTML = "当前页:" + p + "  ,  总页: " + pn;
+            //$("#test").text("Page:"+p+" of "+pn + " pages."); // jquery调用方式
+        };
+        //重写分页状态,跳到第三页,总页33页
+        pageNav.go(page,pag_num);
+};
+
+   // setTimeout(function(){
+
+   // },200)
+
+
+
+    function LoadList(){
+        page = $("input[name='page']").val();
+        $('#box_list').html("");
+        $.ajax({
+            type: 'get',//可选get
+            url: 'http://192.168.1.66/index/Index/getlist',//这里是接收数据的PHP程序
+            data: 'ssid='+sid+'&page='+page+'&num=4',//传给PHP的数据，多个参数用&连接
+            dataType: 'json',//服务器返回的数据类型 可选XML ,Json jsonp script html text等
+            success:function(json){
+                page = $("input[name='page']").val(json.this_page);
+                pag_num = $("input[name='page_num']").val(json.page_num);
+                $("#box_result").tmpl(json.result).appendTo('#box_list');
+                //这里是ajax提交成功后，PHP程序返回的数据处理函数。msg是返回的数据，数据类型在dataType参数里定义！
+            },
+            error:function(){
+                //ajax提交失败的处理函数！
+            }
+        })
+    }
+
+
+
+
+     function Add(){    //添加弹出
+         $('.add_msg').show();
+         $("input[name='sub_form']").click(function(){
+             $.ajax({
+                 type: 'get',//可选get
+                 url: 'http://192.168.1.66/index/Index/create_new',
+                 data: 'ssid='+sid+'&title='+$('#titl').val()+'&body='+$('#cont').val(),
+                 dataType: 'json',
+                 success:function(json){
+                     if(json.type){
+                         alert("SUCCESS");
+                         location.reload();
+                     }else{
+                         alert(json.msg)
+                     }
+                 },
+                 error:function(){
+                 }
+             })
+         })
+     }
+
+
+     function Close(){	//关闭弹出
+         $('.add_msg').hide();
+     }
+
+     function Mod(dom,mid){   //修改弹出
+         $('.add_msg').show();
+
+         $("input[name="+dom.name+"]").each(function(){
+             if($(this).attr('id').substr(2,$(this).attr('id').length-1) == mid){
+                 $('#titl').val($("input[name="+dom.name+"]").closest('.msg_lis').find('.fir_chid').html());
+                 $('#cont').val($("input[name="+dom.name+"]").closest('.msg_lis').find('.sec_chid').html());
+             }
+         });
+
+         $("input[name='sub_form']").click(function(){
+             $.ajax({
+                 type: 'get',//可选get
+                 url: 'http://192.168.1.66/index/Index/update',
+                 data: 'ssid='+sid+'&title='+$('#titl').val()+'&body='+$('#cont').val()+'&id='+mid,
+                 dataType: 'json',
+                 success:function(json){
+                     if(json.type){
+                         alert("SUCCESS");
+                         location.reload();
+                     }else{
+                         alert(json.msg)
+                     }
+                 },
+                 error:function(){
+                 }
+             })
+         })
+
+     }
+    function Del(did){   //删除
+        $.ajax({
+            type: 'get',//可选get
+            url: 'http://192.168.1.66/index/Index/del',
+            data: 'ssid='+sid+'&id='+did,
+            dataType: 'json',
+            success:function(json){
+                if(json.type){
+                    alert("SUCCESS");
+                    location.reload();
+                }else{
+                    alert(json.msg)
+                }
+
+            },
+            error:function(){
+
+            }
+        })
+    }
+
+
+
+
+</script>
+
+
